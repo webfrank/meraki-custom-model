@@ -1,0 +1,74 @@
+<html>
+<head>
+<title>Test Meraki Custom Model</title>
+<style>
+
+</style>
+</head>
+<body>
+
+<canvas id="image" width="960" height="540"></canvas>
+<div style="display:none;">
+  <img id="source" src="image.png" width="960" height="540" />
+</div>
+
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+<script>
+    const labels = {
+        0: 'shoes',
+        1: 'metal',
+        2: 'plastic',
+        3: 'hat',
+        4: 'jumper'
+    }
+
+    const canvas = document.getElementById("image");
+    var ctx = canvas.getContext("2d");
+
+    const WIDTH = canvas.width;
+    const HEIGHT = canvas.height;
+
+    console.log(WIDTH, HEIGHT)
+
+    const image = document.getElementById("source");
+    ctx.drawImage(image, 0, 0, WIDTH, HEIGHT);
+
+    ctx.strokeStyle = "blue";
+    
+    ctx.font = "12px Sans Serif";
+
+    const client = mqtt.connect('ws://mqtt.bizmate.it:8080/mqtt', {
+        username: 'view-probe',
+        password: 'View-2017'
+    });
+    client.subscribe('/merakimv/Q2UV-385V-CANY/custom_analytics');
+
+    client.on('message', (topic, payload) => {
+        const msg = JSON.parse(payload);
+        ctx.beginPath();
+        ctx.fillStyle = 'blue';
+
+        ctx.clearRect(0, 0, WIDTH, HEIGHT);
+        ctx.drawImage(image, 0, 0, WIDTH, HEIGHT);
+
+        msg.outputs.forEach(item => {
+            const x = item.location[0];
+            const y = item.location[1];
+            const w = item.location[2] - item.location[0];
+            const h = item.location[3] - item.location[1];
+            
+            ctx.rect(x * WIDTH, y * HEIGHT, w * WIDTH, h * HEIGHT);
+
+            const label = `${labels[item.class]}: ${item.score}`;
+            const wText = ctx.measureText(label).width + 5;
+            const hText = 17;
+            ctx.fillRect((x + w)/2 * WIDTH - wText/2, (y + h)/2 * HEIGHT - hText/2, wText, hText);
+            ctx.fillStyle = 'white';
+            ctx.fillText(label, (x + w)/2 * WIDTH - wText/2 + 2, (y + h)/2 * HEIGHT + hText/2 - 5);
+        });
+        ctx.stroke();
+    });
+
+</script>
+</body>
+</html>
