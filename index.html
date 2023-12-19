@@ -9,17 +9,14 @@
 
 <canvas id="image" width="960" height="540"></canvas>
 <div style="display:none;">
-  <img id="source" src="image.png" width="960" height="540" />
+  <img id="source" src="Screenshot - MV63 @ TAG - Dec 19 2023 024232 PM CET.png" width="960" height="540" />
 </div>
 
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 <script>
     const labels = {
-        0: 'shoes',
-        1: 'metal',
-        2: 'plastic',
-        3: 'hat',
-        4: 'jumper'
+        0: 'umarell',
+        1: 'gnomo'
     }
 
     const canvas = document.getElementById("image");
@@ -37,21 +34,22 @@
     
     ctx.font = "12px Sans Serif";
 
-    const client = mqtt.connect('ws://mqtt.bizmate.it:8080/mqtt', {
-        username: 'view-probe',
+    const client = mqtt.connect('wss://vrpx.bizmate.it/mqtt', {
+        username: 'view-core',
         password: 'View-2017'
     });
-    client.subscribe('/merakimv/Q2UV-385V-CANY/custom_analytics');
+    client.subscribe('/merakimv/Q2UV-R5ZM-F77X/custom_analytics');
 
     client.on('message', (topic, payload) => {
         const msg = JSON.parse(payload);
         ctx.beginPath();
-        ctx.fillStyle = 'blue';
+        
 
         ctx.clearRect(0, 0, WIDTH, HEIGHT);
         ctx.drawImage(image, 0, 0, WIDTH, HEIGHT);
 
         msg.outputs.forEach(item => {
+          ctx.fillStyle = 'blue';
             const x = item.location[0];
             const y = item.location[1];
             const w = item.location[2] - item.location[0];
@@ -62,9 +60,9 @@
             const label = `${labels[item.class]}: ${item.score}`;
             const wText = ctx.measureText(label).width + 5;
             const hText = 17;
-            ctx.fillRect((x + w)/2 * WIDTH - wText/2, (y + h)/2 * HEIGHT - hText/2, wText, hText);
+            ctx.fillRect((x + w/2) * WIDTH - wText/2, (y + h/2) * HEIGHT - hText/2, wText, hText);
             ctx.fillStyle = 'white';
-            ctx.fillText(label, (x + w)/2 * WIDTH - wText/2 + 2, (y + h)/2 * HEIGHT + hText/2 - 5);
+            ctx.fillText(label, (x + w/2) * WIDTH - wText/2 + 2, (y + h/2) * HEIGHT + hText/2 - 5);
         });
         ctx.stroke();
     });
